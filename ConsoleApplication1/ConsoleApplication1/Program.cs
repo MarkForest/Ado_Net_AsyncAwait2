@@ -22,25 +22,59 @@ namespace ConsoleApplication1
         public string Company { get; set; }
     }
 
+    class Player
+    {
+        public string  Name { get; set; }
+        public string  team { get; set; }
+    }
+
+    class Team
+    {
+        public string Name { get; set; }
+        public string Country { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
+
             string[] teams = { "Бавария", "Борусия", "Реал Мадрид", "Манчестер Сити", "ПСЖ", "Барселона" };
             int[] numbers = { 1, 23, 45, 5, 7, 878, 989, 6, 67, 4, 7, 12, 5 };
             string[] soft = { "Microsoft", "Google", "Apple" };
             string[] hard = { "Apple", "IBM", "Samsung" };
 
+            List<Team> teams2 = new List<Team> {
+                new Team {Name="Бавария", Country="Германия" },
+                new Team {Name="Барселона", Country="Испания" }
+            };
+
+            List<Player> players = new List<Player>
+            {
+                new Player { Name="Месси",team = "Барселона" },
+                new Player { Name="Неймар",team = "Барселона" },
+                new Player { Name="Роббен",team = "Бавария" }
+            };
+
             List<User> users = new List<User> {
                 new User {Name="Bob", Age = 14, Language = new List<string> { "Английский","Арабский"} },
                 new User {Name="Tom", Age = 23, Language = new List<string> { "Английский","Француский"} },
-                new User {Name="Jon", Age = 14, Language = new List<string> { "Английский","Португальский"} },
-                new User {Name="Bob", Age = 14, Language = new List<string> { "Арабский", "Француский" } }
+                new User {Name="Jon", Age = 34, Language = new List<string> { "Английский","Португальский"} },
+                new User {Name="Bob", Age = 54, Language = new List<string> { "Арабский", "Француский" } }
             };
 
             List<Phone> phones = new List<Phone> {
                 new Phone {Name="Lumia 630", Company="Microsoft" },
-                new Phone {Name="iPhone 6", Company="Apple Кривой Рог" }
+                new Phone {Name="LG G 3", Company="LG" },
+                new Phone {Name="Mi 5", Company="Xiaomi" },
+                new Phone {Name="iPhone 6", Company="Apple Кривой Рог" },
+                new Phone {Name="Lumia 430", Company="Microsoft" },
+                new Phone {Name="iPhone 5", Company="Apple Кривой Рог" },
+                new Phone {Name="iPhone x", Company="Apple Кривой Рог" },
+                new Phone {Name="Lumia 930", Company="Microsoft" },
+                new Phone {Name="iPhone 6s", Company="Apple Кривой Рог" },
+                new Phone {Name="LG G 4", Company="LG" },
+                new Phone {Name="iPhone 7", Company="Apple Кривой Рог" }
             };
 
             //Основы LINQ
@@ -102,9 +136,28 @@ namespace ConsoleApplication1
             //TakeWhile, SkipWhile
             Console.WriteLine("-----------Take-----------");
             MethodLinQ14(teams);
-
+            //Групировка
+            Console.WriteLine("-----------Групировка-----------");
+            MethodLinQ15(phones);
+            //Групировка Count
+            Console.WriteLine("-----------Групировка Count-----------");
+            MethodLinQ16(phones);
+            //Cоединение колекций. Метод Join
+            Console.WriteLine("-----------Cоединение колекций. Метод Join, Zip-----------");
+            MethodLinQ17(players, teams2);
+            //Cоединение колекций. All Any
+            Console.WriteLine("-----------All Any-----------");
+            MethodLinQ18(users);
+            //Немедленное выполнение
+            Console.WriteLine("-----------Немедленное выполнение-----------");
+            MethodLinQ19(teams);
 
         }
+
+        
+
+
+
 
         //Основы LINQ
         private static void MethodLinQ(string[] teams)
@@ -326,6 +379,121 @@ namespace ConsoleApplication1
             {
                 Console.WriteLine(item);
             }
+
+        }
+        //Групировка
+        private static void MethodLinQ15(List<Phone> phones)
+        {
+            //var phoneGroups = from phone in phones
+            //                  group phone by phone.Company;
+
+            var phoneGroups = phones.GroupBy(p => p.Company);
+
+            foreach (IGrouping<string, Phone> item in phoneGroups)
+            {
+                Console.WriteLine(item.Key);
+                foreach (var i in item)
+                {
+                    Console.WriteLine(i.Name);
+                }
+                Console.WriteLine();
+            }
+
+        }
+        //Групировка Count
+        private static void MethodLinQ16(List<Phone> phones)
+        {
+            //var phoneGroup = from phone in phones
+            //                 group phone by phone.Company into g
+            //                 select new { Name = g.Key, Count = g.Count() };
+
+            var phoneGroup = phones.GroupBy(p => p.Company)
+                .Select(g => new { Name = g.Key, Count = g.Count() });
+
+            foreach (var group in phoneGroup)
+            {
+                Console.WriteLine($"{group.Name}: {group.Count}");
+            }
+
+            foreach (var item in phones.Select(p => p))
+            {
+                Console.WriteLine(item.Name);
+            }
+
+            //Вложенные запросы
+            var phoneGroup2 = from phone in phones
+                              group phone by phone.Company into g
+                              select new
+                              {
+                                  Name = g.Key,
+                                  Count = g.Count(),
+                                  Phones = from p in g select p
+                              };
+
+
+            //var phoneGroup2 = phones.GroupBy(p => p.Company)
+            //    .Select(g => new {
+            //        Name = g.Key,
+            //        Count = g.Count(),
+            //        Phones = g.Select(p=>p) });
+
+            foreach (var group in phoneGroup2)
+            {
+                Console.WriteLine($"{group.Name}: {group.Count}");
+                foreach (Phone p in group.Phones)
+                {
+                    Console.WriteLine(p.Name);
+                }
+                Console.WriteLine();
+            }
+
+        }
+        //Cоединение колекций. Метод Join, Zip
+        private static void MethodLinQ17(List<Player> players, List<Team> teams2)
+        {
+            var result = from p in players
+                         join t in teams2 on p.team equals t.Name
+                         select new { Name = p.Name, Team = p.team, t.Country};
+            foreach (var player in result)
+            {
+                Console.WriteLine($"{player.Name} - {player.Team} ({player.Country})");
+            }
+
+            var result2 = players.Join(
+                teams2, //second collection
+                p => p.team, //property of first collection
+                t => t.Name, //property of second collection
+                (p, t) => new { Name = p.Name, Team = p.team, t.Country } //result
+            );
+
+            foreach (var player in result2)
+            {
+                Console.WriteLine($"{player.Name} - {player.Team} ({player.Country})");
+            }
+        }
+        //All Any
+        private static void MethodLinQ18(List<User> users)
+        {
+            bool result = users.All(u => u.Age > 20); //false
+            bool result2 = users.Any(u => u.Age < 20); //true
+        }
+        //Немедленное выполнение
+        private static void MethodLinQ19(string[] teams)
+        {
+            int i = (from t in teams where t.StartsWith("Б") orderby t select t).Count();
+            Console.WriteLine(i); //3
+            //teams[1] = "Ugaslavia";
+            Console.WriteLine(i); //3
+
+            var result = from t in teams where t.StartsWith("Б") orderby t select t;
+            Console.WriteLine(result.Count()); //3
+            //teams[1] = "Ugaslavia";
+            Console.WriteLine(result.Count()); //2
+
+            var result2 = (from t in teams where t.StartsWith("Б") orderby t select t).ToList<string>();
+            Console.WriteLine(result2.Count()); //3
+            teams[1] = "Ugaslavia";
+            Console.WriteLine(result2.Count()); //3
 
         }
 
